@@ -1,0 +1,7 @@
+[
+  { "id":1, "initials":"TW", "name":"Thomas Wilson",  "email":"thomas.w@example.com",    "membership":"Premium",  "joined":"Today"      },
+  { "id":2, "initials":"JA", "name":"Jennifer Adams",  "email":"jennifer.a@example.com",  "membership":"Standard", "joined":"Yesterday"  },
+  { "id":3, "initials":"ML", "name":"Michael Lee",     "email":"michael.l@example.com",   "membership":"Premium",  "joined":"Yesterday"  },
+  { "id":4, "initials":"LM", "name":"Laura Martinez",  "email":"laura.m@example.com",     "membership":"Standard", "joined":"2 days ago" },
+  { "id":5, "initials":"RC", "name":"Robert Clark",    "email":"robert.c@example.com",    "membership":"Premium",  "joined":"3 days ago" }
+]

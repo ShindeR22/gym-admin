@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "name": "Morning Yoga",
+    "instructor": "Emma Wilson",
+    "time": "07:00 – 08:00",
+    "capacity": "18/20",
+    "status": "In Progress",
+    "statusColor": "green"
+  },
+  {
+    "id": 2,
+    "name": "HIIT Training",
+    "instructor": "Mike Johnson",
+    "time": "09:30 – 10:30",
+    "capacity": "12/15",
+    "status": "Upcoming",
+    "statusColor": "blue"
+  },
+  {
+    "id": 3,
+    "name": "Spinning Class",
+    "instructor": "Sarah Parker",
+    "time": "12:00 – 13:00",
+    "capacity": "20/20",
+    "status": "Full",
+    "statusColor": "orange"
+  },
+  {
+    "id": 4,
+    "name": "Strength Training",
+    "instructor": "David Brown",
+    "time": "16:30 – 17:30",
+    "capacity": "8/15",
+    "status": "Upcoming",
+    "statusColor": "blue"
+  },
+  {
+    "id": 5,
+    "name": "Evening Pilates",
+    "instructor": "Lisa Chen",
+    "time": "18:00 – 19:00",
+    "capacity": "15/20",
+    "status": "Upcoming",
+    "statusColor": "blue"
+  }
+]

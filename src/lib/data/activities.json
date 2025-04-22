@@ -1,0 +1,7 @@
+[
+  { "id":1, "icon":"user-plus",     "title":"New member registered",   "subtitle":"Thomas Wilson",   "timeAgo":"15 minutes ago" },
+  { "id":2, "icon":"check-circle",  "title":"Completed session",       "subtitle":"Angela Moore",     "timeAgo":"42 minutes ago" },
+  { "id":3, "icon":"dollar-sign",   "title":"Renewed membership",      "subtitle":"Robert Johnson",   "timeAgo":"1 hour ago" },
+  { "id":4, "icon":"x-circle",      "title":"Class canceled",          "subtitle":"Evening Yoga",     "timeAgo":"2 hours ago" },
+  { "id":5, "icon":"settings",      "title":"Equipment maintenance",   "subtitle":"Treadmill #3",     "timeAgo":"3 hours ago" }
+]
