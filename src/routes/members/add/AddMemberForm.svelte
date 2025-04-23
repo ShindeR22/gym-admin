@@ -2,26 +2,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-
-	// Type definition for form data
-	interface MemberFormData {
-		firstName: string;
-		lastName: string;
-		email: string;
-		phone: string;
-		birthdate: string;
-		address: string;
-		city: string;
-		state: string;
-		zipCode: string;
-		membershipPlan: string;
-		paymentMethod: string;
-		startDate: string;
-		endDate: string;
-		emergencyContact: string;
-		emergencyPhone: string;
-		notes: string;
-	}
+	import { createMember, type MemberFormData } from './memberpostapi';
 
 	// Initialize form data with default values
 	let formData: MemberFormData = {
@@ -54,26 +35,13 @@
 		formData.endDate = defaultEndDate.toISOString().split('T')[0];
 	});
 
-	// Function to handle form submission
+	// Handle form submission
 	const handleSubmit = async () => {
 		try {
 			isSubmitting = true;
 			errorMessage = '';
 
-			// Send data to the API endpoint
-			const response = await fetch('/api/members', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(formData)
-			});
-
-			const result = await response.json();
-
-			if (!response.ok) {
-				throw new Error(result.error || 'Failed to add member');
-			}
+			const result = await createMember(formData);
 
 			successMessage = 'Member added successfully!';
 

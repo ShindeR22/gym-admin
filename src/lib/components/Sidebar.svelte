@@ -3,6 +3,7 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
 	import { signOut } from '@auth/sveltekit/client';
+	import { SignOut } from '@auth/sveltekit/components';
 
 	// Access the session data
 	$: user = $page.data.session?.user;
@@ -24,7 +25,7 @@
 
 <nav class="bg-[#2E1F89] text-white w-64 h-screen flex flex-col justify-between">
 	<div>
-		<div class="text-2xl font-bold px-6 py-4">FLEX GYM</div>
+		<div class="text-2xl font-bold px-6 py-4">BM Fitness</div>
 		<ul class="space-y-2 px-2 pt-4">
 			<li>
 				<a
@@ -106,9 +107,9 @@
 				</div>
 				<div>
 					<p class="text-sm font-semibold">{user.name || user.email}</p>
-					<button on:click={handleLogout} class="text-xs text-gray-300 hover:text-white">
+					<SignOut on:click={handleLogout} class="text-xs text-gray-300 hover:text-white">
 						Sign out
-					</button>
+					</SignOut>
 				</div>
 			</div>
 		</div>

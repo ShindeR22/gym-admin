@@ -31,12 +31,15 @@ export const POST = async ({ request }: RequestEvent) => {
 export const GET = async () => {
         try {
                 const members = await prisma.member.findMany({
-                        orderBy: { createdAt: 'desc' }
+                        orderBy: {
+                                id: 'desc'
+                        }
                 });
-
-                return json(members);
+                return json({ success: true, members }, { status: 200 });
         } catch (error) {
                 console.error('Error fetching members:', error);
                 return json({ error: 'Failed to fetch members' }, { status: 500 });
         }
 };
+
+

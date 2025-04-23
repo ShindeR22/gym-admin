@@ -16,12 +16,11 @@
 {#if issigninPage}
 	<!-- Just render the signin page without layout -->
 	<slot />
-{:else}
+{:else if isAuthenticated}
 	<div class="flex h-screen">
 		<!-- Sidebar -->
-		{#if isAuthenticated}
-			<Sidebar />
-		{/if}
+
+		<Sidebar />
 
 		<!-- Main Content Area -->
 		<div class="flex-1 flex flex-col {isAuthenticated ? '' : 'ml-0'}">
@@ -29,6 +28,7 @@
 			<Header />
 
 			<!-- Content -->
+
 			<main class="p-6 overflow-auto flex-1">
 				<slot />
 			</main>

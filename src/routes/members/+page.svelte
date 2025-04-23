@@ -1,84 +1,111 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { getMembers } from './add/memberpostapi';
 
 	// Types for type safety
 	interface Member {
 		id: number;
-		name: string;
+		firstName: string;
+		lastName: string;
 		email: string;
-		plan: string;
-		status: 'Active' | 'Inactive' | 'Pending';
-		joinDate: string;
+		phone: string;
+		membershipPlan: string;
+		startDate: string;
+		endDate: string;
 	}
 
-	// Mock data for members
-	let members: Member[] = [
-		{
-			id: 1,
-			name: 'Jennifer Thompson',
-			email: 'jennifer.t@example.com',
-			plan: 'Premium',
-			status: 'Active',
-			joinDate: '12 Feb 2025'
-		},
-		{
-			id: 2,
-			name: 'Michael Roberts',
-			email: 'michael.r@example.com',
-			plan: 'Standard',
-			status: 'Active',
-			joinDate: '03 Mar 2025'
-		},
-		{
-			id: 3,
-			name: 'Sarah Parker',
-			email: 'sarah.p@example.com',
-			plan: 'Premium',
-			status: 'Inactive',
-			joinDate: '19 Jan 2025'
-		},
-		{
-			id: 4,
-			name: 'David Brown',
-			email: 'david.b@example.com',
-			plan: 'Monthly',
-			status: 'Active',
-			joinDate: '05 Apr 2025'
-		},
-		{
-			id: 5,
-			name: 'Emma Wilson',
-			email: 'emma.w@example.com',
-			plan: 'Premium',
-			status: 'Active',
-			joinDate: '21 Dec 2024'
-		},
-		{
-			id: 6,
-			name: 'Thomas Wilson',
-			email: 'thomas.w@example.com',
-			plan: 'Standard',
-			status: 'Pending',
-			joinDate: '21 Apr 2025'
-		}
-	];
-
+	let members: Member[] = [];
 	let searchQuery = '';
-	let selectedFilter = 'All';
-	let filteredMembers = [...members];
+	let selectedFilter: 'All' | 'Active' | 'Inactive' | 'Pending' = 'All';
+	let loading = true;
+	let error = '';
 
-	$: {
-		filteredMembers = members.filter((member) => {
-			const matchesSearch =
-				member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				member.email.toLowerCase().includes(searchQuery.toLowerCase());
+	// Derive status and joinDate for UI
+	const deriveStatus = (m: Member) => {
+		const now = new Date();
+		const start = new Date(m.startDate);
+		const end = new Date(m.endDate);
+		if (start > now) return ' Inactive';
+		if (end >= now) return 'Active';
+		return 'Pending';
+	};
+	// Mock data for members
+	// let members: Member[] = [
+	// 	{
+	// 		id: 1,
+	// 		name: 'Jennifer Thompson',
+	// 		email: 'jennifer.t@example.com',
+	// 		plan: 'Premium',
+	// 		status: 'Active',
+	// 		joinDate: '12 Feb 2025'
+	// 	},
+	// 	{
+	// 		id: 2,
+	// 		name: 'Michael Roberts',
+	// 		email: 'michael.r@example.com',
+	// 		plan: 'Standard',
+	// 		status: 'Active',
+	// 		joinDate: '03 Mar 2025'
+	// 	},
+	// 	{
+	// 		id: 3,
+	// 		name: 'Sarah Parker',
+	// 		email: 'sarah.p@example.com',
+	// 		plan: 'Premium',
+	// 		status: 'Inactive',
+	// 		joinDate: '19 Jan 2025'
+	// 	},
+	// 	{
+	// 		id: 4,
+	// 		name: 'David Brown',
+	// 		email: 'david.b@example.com',
+	// 		plan: 'Monthly',
+	// 		status: 'Active',
+	// 		joinDate: '05 Apr 2025'
+	// 	},
+	// 	{
+	// 		id: 5,
+	// 		name: 'Emma Wilson',
+	// 		email: 'emma.w@example.com',
+	// 		plan: 'Premium',
+	// 		status: 'Active',
+	// 		joinDate: '21 Dec 2024'
+	// 	},
+	// 	{
+	// 		id: 6,
+	// 		name: 'Thomas Wilson',
+	// 		email: 'thomas.w@example.com',
+	// 		plan: 'Standard',
+	// 		status: 'Pending',
+	// 		joinDate: '21 Apr 2025'
+	// 	}
+	// ];
 
-			const matchesFilter = selectedFilter === 'All' || member.status === selectedFilter;
+	// let searchQuery = '';
+	// let selectedFilter = 'All';
+	// let filteredMembers = [...members];
 
-			return matchesSearch && matchesFilter;
-		});
-	}
+	// Fetch members from API
+	onMount(async () => {
+		try {
+			members = await getMembers();
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Unknown error';
+		} finally {
+			loading = false;
+		}
+	});
+
+	$: filteredMembers = members.filter((member) => {
+		const name = `${member.firstName} ${member.lastName}`;
+		const matchesSearch =
+			name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			member.email.toLowerCase().includes(searchQuery.toLowerCase());
+		const status = deriveStatus(member);
+		const matchesFilter = selectedFilter === 'All' || status === selectedFilter;
+		return matchesSearch && matchesFilter;
+	});
 
 	function deleteMember(id: number) {
 		members = members.filter((member) => member.id !== id);
@@ -89,7 +116,7 @@
 	<div class="flex justify-between items-center mb-6">
 		<div>
 			<h1 class="text-2xl font-bold text-gray-800">Members</h1>
-			<p class="text-gray-500 text-sm mt-1">Manage your gym membership database</p>
+			<p class="text-gray-500 text-m mt-1">Manage your gym membership database</p>
 		</div>
 		<button
 			class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md flex items-center"
@@ -128,9 +155,9 @@
 					</svg>
 				</div>
 				<div class="ml-4">
-					<p class="text-gray-500 text-sm">Total Members</p>
+					<p class="text-gray-500 text-m">Total Members</p>
 					<p class="text-2xl font-bold text-gray-800">1,284</p>
-					<p class="text-green-500 text-sm flex items-center">
+					<p class="text-green-500 text-m flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-4 w-4 mr-1"
@@ -169,9 +196,9 @@
 					</svg>
 				</div>
 				<div class="ml-4">
-					<p class="text-gray-500 text-sm">Active Members</p>
+					<p class="text-gray-500 text-m">Active Members</p>
 					<p class="text-2xl font-bold text-gray-800">1,051</p>
-					<p class="text-green-500 text-sm flex items-center">
+					<p class="text-green-500 text-m flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-4 w-4 mr-1"
@@ -210,9 +237,9 @@
 					</svg>
 				</div>
 				<div class="ml-4">
-					<p class="text-gray-500 text-sm">New This Month</p>
+					<p class="text-gray-500 text-m">New This Month</p>
 					<p class="text-2xl font-bold text-gray-800">78</p>
-					<p class="text-green-500 text-sm flex items-center">
+					<p class="text-green-500 text-m flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-4 w-4 mr-1"
@@ -265,10 +292,10 @@
 				</div>
 
 				<div class="hidden md:flex gap-2">
-					<button class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-md text-sm font-medium">
+					<button class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-md text-m font-medium">
 						Export CSV
 					</button>
-					<button class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-md text-sm font-medium">
+					<button class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-md text-m font-medium">
 						Print
 					</button>
 				</div>
@@ -310,7 +337,7 @@
 						>
 						<th
 							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Email</th
+							>Mobile NO</th
 						>
 						<th
 							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -325,6 +352,10 @@
 							>Join Date</th
 						>
 						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+							>End Date</th
+						>
+						<th
 							class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
 							>Actions</th
 						>
@@ -335,45 +366,43 @@
 						<tr class="hover:bg-gray-50">
 							<td class="px-6 py-4 whitespace-nowrap">
 								<div class="flex items-center">
-									<div class="h-10 w-10 flex-shrink-0">
-										<div
-											class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-medium"
-										>
-											{member.name
-												.split(' ')
-												.map((n) => n[0])
-												.join('')}
-										</div>
+									<div
+										class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-medium"
+									>
+										{`${member.firstName} ${member.lastName}`
+											.split(' ')
+											.map((n: string) => n[0])
+											.join('')}
 									</div>
 									<div class="ml-4">
-										<div class="text-sm font-medium text-gray-900">{member.name}</div>
+										<div class="text-m font-medium text-gray-900">
+											{member.firstName}
+											{member.lastName}
+										</div>
 									</div>
 								</div>
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-500">{member.email}</div>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900">{member.plan}</div>
-							</td>
+							<td class="px-6 py-4 whitespace-nowrap"
+								><div class="text-m text-gray-500">{member.phone}</div></td
+							>
+							<td class="px-6 py-4 whitespace-nowrap"
+								><div class="text-m text-gray-900">{member.membershipPlan}</div></td
+							>
 							<td class="px-6 py-4 whitespace-nowrap">
 								<span
-									class={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                  ${
-										member.status === 'Active'
-											? 'bg-green-100 text-green-800'
-											: member.status === 'Inactive'
-												? 'bg-red-100 text-red-800'
-												: 'bg-yellow-100 text-yellow-800'
-									}`}
+									class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+									class:!bg-green-100={!deriveStatus(member)}
 								>
-									{member.status}
+									{deriveStatus(member)}
 								</span>
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-								{member.joinDate}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+							<td class="px-6 py-4 whitespace-nowrap text-m text-gray-500"
+								>{new Date(member.startDate).toLocaleDateString()}</td
+							>
+							<td class="px-6 py-4 whitespace-nowrap text-m text-gray-500"
+								>{new Date(member.endDate).toLocaleDateString()}</td
+							>
+							<td class="px-6 py-4 whitespace-nowrap text-right text-m font-medium">
 								<!-- svelte-ignore a11y_consider_explicit_label -->
 								<button class="text-indigo-600 hover:text-indigo-900 mr-3">
 									<svg
@@ -414,28 +443,27 @@
 							</td>
 						</tr>
 					{/each}
-
 					{#if filteredMembers.length === 0}
-						<tr>
-							<td colspan="6" class="px-6 py-4 text-center text-gray-500">
-								No members found matching your search criteria
-							</td>
-						</tr>
+						<tr
+							><td colspan="6" class="px-6 py-4 text-center text-gray-500"
+								>No members found matching your search criteria</td
+							></tr
+						>
 					{/if}
 				</tbody>
 			</table>
 		</div>
 
 		<div class="px-6 py-4 border-t flex justify-between items-center">
-			<div class="text-gray-500 text-sm">
+			<div class="text-gray-500 text-m">
 				Showing {filteredMembers.length} of {members.length} members
 			</div>
 			<div class="flex space-x-1">
-				<button class="border rounded px-3 py-1 text-sm hover:bg-gray-50">Previous</button>
-				<button class="bg-indigo-600 text-white rounded px-3 py-1 text-sm">1</button>
-				<button class="border rounded px-3 py-1 text-sm hover:bg-gray-50">2</button>
-				<button class="border rounded px-3 py-1 text-sm hover:bg-gray-50">3</button>
-				<button class="border rounded px-3 py-1 text-sm hover:bg-gray-50">Next</button>
+				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">Previous</button>
+				<button class="bg-indigo-600 text-white rounded px-3 py-1 text-m">1</button>
+				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">2</button>
+				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">3</button>
+				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">Next</button>
 			</div>
 		</div>
 	</div>
@@ -464,7 +492,7 @@
 						</svg>
 					</div>
 					<div>
-						<p class="text-sm font-medium">Thomas Wilson registered as a new member</p>
+						<p class="text-m font-medium">Thomas Wilson registered as a new member</p>
 						<p class="text-xs text-gray-500">15 minutes ago</p>
 					</div>
 				</div>
@@ -488,7 +516,7 @@
 						</svg>
 					</div>
 					<div>
-						<p class="text-sm font-medium">Sarah Parker updated her profile information</p>
+						<p class="text-m font-medium">Sarah Parker updated her profile information</p>
 						<p class="text-xs text-gray-500">1 hour ago</p>
 					</div>
 				</div>
@@ -512,7 +540,7 @@
 						</svg>
 					</div>
 					<div>
-						<p class="text-sm font-medium">Michael Roberts membership expired</p>
+						<p class="text-m font-medium">Michael Roberts membership expired</p>
 						<p class="text-xs text-gray-500">3 hours ago</p>
 					</div>
 				</div>
@@ -536,7 +564,7 @@
 						</svg>
 					</div>
 					<div>
-						<p class="text-sm font-medium">Emma Wilson upgraded to Premium plan</p>
+						<p class="text-m font-medium">Emma Wilson upgraded to Premium plan</p>
 						<p class="text-xs text-gray-500">Yesterday</p>
 					</div>
 				</div>
@@ -548,8 +576,8 @@
 			<div class="space-y-4">
 				<div>
 					<div class="flex justify-between mb-1">
-						<span class="text-sm font-medium">Premium</span>
-						<span class="text-sm text-gray-500">45%</span>
+						<span class="text-m font-medium">Premium</span>
+						<span class="text-m text-gray-500">45%</span>
 					</div>
 					<div class="w-full bg-gray-200 rounded-full h-2">
 						<div class="bg-indigo-600 h-2 rounded-full" style="width: 45%"></div>
@@ -557,8 +585,8 @@
 				</div>
 				<div>
 					<div class="flex justify-between mb-1">
-						<span class="text-sm font-medium">Standard</span>
-						<span class="text-sm text-gray-500">35%</span>
+						<span class="text-m font-medium">Standard</span>
+						<span class="text-m text-gray-500">35%</span>
 					</div>
 					<div class="w-full bg-gray-200 rounded-full h-2">
 						<div class="bg-blue-500 h-2 rounded-full" style="width: 35%"></div>
@@ -566,8 +594,8 @@
 				</div>
 				<div>
 					<div class="flex justify-between mb-1">
-						<span class="text-sm font-medium">Monthly</span>
-						<span class="text-sm text-gray-500">15%</span>
+						<span class="text-m font-medium">Monthly</span>
+						<span class="text-m text-gray-500">15%</span>
 					</div>
 					<div class="w-full bg-gray-200 rounded-full h-2">
 						<div class="bg-green-500 h-2 rounded-full" style="width: 15%"></div>
@@ -575,8 +603,8 @@
 				</div>
 				<div>
 					<div class="flex justify-between mb-1">
-						<span class="text-sm font-medium">Trial</span>
-						<span class="text-sm text-gray-500">5%</span>
+						<span class="text-m font-medium">Trial</span>
+						<span class="text-m text-gray-500">5%</span>
 					</div>
 					<div class="w-full bg-gray-200 rounded-full h-2">
 						<div class="bg-yellow-500 h-2 rounded-full" style="width: 5%"></div>
