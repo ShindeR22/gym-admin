@@ -1,24 +1,37 @@
-<script>
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
 	import '../app.css';
-	import Header from '../lib/components/Header.svelte';
-	import Sidebar from '../lib/components/Sidebar.svelte';
+	import { page } from '$app/stores';
+	import Header from '$lib/components/Header.svelte';
+	import Sidebar from '$lib/components/Sidebar.svelte';
+
+	// Get the current route
+	$: path = $page.url.pathname;
+
+	// Check if user is on signin page or authenticated routes
+	$: issigninPage = path === '/signin';
+	$: isAuthenticated = !!$page.data.session?.user;
 </script>
 
-<div class="h-screen flex flex-col">
-	<!-- Fixed Header -->
-
-	<div class="flex flex-1">
-		<!-- Fixed Sidebar -->
-		<div class="fixed left-0 h-[calc(100vh-4rem)] w-64 z-40 bg-white border-r">
+{#if issigninPage}
+	<!-- Just render the signin page without layout -->
+	<slot />
+{:else}
+	<div class="flex h-screen">
+		<!-- Sidebar -->
+		{#if isAuthenticated}
 			<Sidebar />
-		</div>
+		{/if}
 
-		<!-- Scrollable Main Content -->
-		<main class="ml-64 mt-16 p-4 overflow-y-auto h-[calc(100vh-4rem)] w-full">
-			<div class="fixed top-0 left-0 right-0 z-50 ml-64">
-				<Header />
-			</div>
-			<slot />
-		</main>
+		<!-- Main Content Area -->
+		<div class="flex-1 flex flex-col {isAuthenticated ? '' : 'ml-0'}">
+			<!-- Header -->
+			<Header />
+
+			<!-- Content -->
+			<main class="p-6 overflow-auto flex-1">
+				<slot />
+			</main>
+		</div>
 	</div>
-</div>
+{/if}

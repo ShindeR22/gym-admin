@@ -1,5 +1,5 @@
 <!-- src/routes/dashboard/+page.svelte -->
-<!-- <script lang="ts">
+<script lang="ts">
 	import { page } from '$app/stores';
 	import DashboardMetrics from '$lib/components/DashboardMetrics.svelte';
 	import ClassesTable from '$lib/components/ClassesTable.svelte';
@@ -8,6 +8,7 @@
 	import RecentActivities from '$lib/components/RecentActivities.svelte';
 	import NewMembers from '$lib/components/NewMembers.svelte';
 
+	// Access session data from the page store
 	$: user = $page.data.session?.user;
 </script>
 
@@ -24,20 +25,18 @@
 
 	<DashboardMetrics />
 
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-		<div class="bg-white rounded-lg shadow p-6">
-			<h3 class="text-lg font-semibold mb-4">Today's Classes</h3>
-			<ClassesTable />
-		</div>
-
-		<div class="bg-white rounded-lg shadow p-6">
-			<h3 class="text-lg font-semibold mb-4">Recent Activities</h3>
-			<RecentActivities {activities} />
-		</div>
+	<div class="bg-white rounded-lg shadow p-6">
+		<!-- <h3 class="text-lg font-semibold mb-4">Today's Classes</h3> -->
+		<ClassesTable />
 	</div>
 
 	<div class="bg-white rounded-lg shadow p-6">
-		<h3 class="text-lg font-semibold mb-4">New Members</h3>
+		<!-- <h3 class="text-lg font-semibold mb-4">Recent Activities</h3> -->
+		<RecentActivities {activities} />
+	</div>
+
+	<div class="bg-white rounded-lg shadow p-6">
+		<!-- <h3 class="text-lg font-semibold mb-4">New Members</h3> -->
 		<NewMembers {members} />
 	</div>
-</div> -->
+</div>

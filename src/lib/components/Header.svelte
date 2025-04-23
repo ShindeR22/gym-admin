@@ -1,5 +1,22 @@
-<script>
-	import { User, Bell } from 'svelte-heros';
+<!-- src/lib/components/Header.svelte -->
+<script lang="ts">
+	import { Bell } from 'svelte-heros';
+	import { signOut } from '@auth/sveltekit/client';
+	import { page } from '$app/stores';
+
+	// Access the session data
+	$: user = $page.data.session?.user;
+
+	function handleLogout() {
+		signOut({ callbackUrl: '/signin' });
+	}
+
+	// Create initials from user name or email
+	$: initials = user?.name
+		? `${user.name.split(' ')[0][0]}${user.name.split(' ').length > 1 ? user.name.split(' ')[1][0] : ''}`
+		: user?.email
+			? user.email[0].toUpperCase()
+			: 'U';
 </script>
 
 <header class="bg-white shadow p-4 flex justify-between items-center border-b">
@@ -14,10 +31,24 @@
 			class="p-2 px-4 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2E1F89] text-sm"
 		/>
 		<Bell class="h-6 w-6 text-[#2E1F89] cursor-pointer hover:text-purple-900 transition" />
-		<div
-			class="w-8 h-8 bg-[#2E1F89] rounded-full flex items-center justify-center text-white text-sm font-semibold"
-		>
-			JD
-		</div>
+
+		{#if user}
+			<div class="relative group">
+				<div
+					class="w-8 h-8 bg-[#2E1F89] rounded-full flex items-center justify-center text-white text-sm font-semibold cursor-pointer"
+					aria-label="User profile"
+				>
+					{#if user.image}
+						<img src={user.image} alt={user.name || 'User'} class="w-8 h-8 rounded-full" />
+					{:else}
+						{initials}
+					{/if}
+				</div>
+			</div>
+		{:else}
+			<a href="/signin" class="text-[#2E1F89] hover:text-purple-900 transition text-sm font-medium">
+				signin
+			</a>
+		{/if}
 	</div>
 </header>
