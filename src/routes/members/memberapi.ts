@@ -1,6 +1,6 @@
-"use client"
 
-// Type definition for form data
+
+// * Fetch all members
 export interface MemberFormData {
         firstName: string;
         lastName: string;
@@ -20,11 +20,6 @@ export interface MemberFormData {
         notes: string;
 }
 
-export interface MemberResponse {
-        member: {
-                id: string;
-        }
-}
 
 
 
@@ -40,38 +35,13 @@ export interface Member {
         // …add extra fields as your API returns them
 }
 
-export interface MemberResponse {
-        member: { id: string };
-}
+
 
 export interface MembersResponse {
         success: boolean;
         members: Member[];
         error?: string;
 }
-
-
-export async function createMember(memberFormData: Partial<MemberFormData>): Promise<MemberResponse> {
-        const response = await fetch('/api/members', {
-                method: 'POST',
-                headers: {
-                        "Content-Type": "application/json",
-                },
-                body: JSON.stringify(memberFormData),
-        });
-
-        if (!response.ok) {
-                const errorResponse = await response.json();
-                throw new Error(errorResponse.error || 'Failed to add member');
-        }
-
-        return response.json();
-}
-
-
-
-
-// * Fetch all members
 
 export async function getMembers(): Promise<Member[]> {
         const response = await fetch('/api/members');
@@ -81,3 +51,18 @@ export async function getMembers(): Promise<Member[]> {
         }
         return data.members;
 }
+
+
+
+export async function deleteMember(id: number): Promise<void> {
+        const res = await fetch(`/api/members/${id}`, {
+                method: 'DELETE'
+        });
+        if (!res.ok) {
+                const payload = await res.json().catch(() => ({}));
+                throw new Error((payload).error || 'Failed to delete member');
+        }
+}
+
+
+

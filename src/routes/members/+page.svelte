@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { getMembers } from './add/memberpostapi';
+	import { deleteMember, getMembers } from './memberapi';
 
 	// Types for type safety
 	interface Member {
@@ -30,61 +30,6 @@
 		if (end >= now) return 'Active';
 		return 'Pending';
 	};
-	// Mock data for members
-	// let members: Member[] = [
-	// 	{
-	// 		id: 1,
-	// 		name: 'Jennifer Thompson',
-	// 		email: 'jennifer.t@example.com',
-	// 		plan: 'Premium',
-	// 		status: 'Active',
-	// 		joinDate: '12 Feb 2025'
-	// 	},
-	// 	{
-	// 		id: 2,
-	// 		name: 'Michael Roberts',
-	// 		email: 'michael.r@example.com',
-	// 		plan: 'Standard',
-	// 		status: 'Active',
-	// 		joinDate: '03 Mar 2025'
-	// 	},
-	// 	{
-	// 		id: 3,
-	// 		name: 'Sarah Parker',
-	// 		email: 'sarah.p@example.com',
-	// 		plan: 'Premium',
-	// 		status: 'Inactive',
-	// 		joinDate: '19 Jan 2025'
-	// 	},
-	// 	{
-	// 		id: 4,
-	// 		name: 'David Brown',
-	// 		email: 'david.b@example.com',
-	// 		plan: 'Monthly',
-	// 		status: 'Active',
-	// 		joinDate: '05 Apr 2025'
-	// 	},
-	// 	{
-	// 		id: 5,
-	// 		name: 'Emma Wilson',
-	// 		email: 'emma.w@example.com',
-	// 		plan: 'Premium',
-	// 		status: 'Active',
-	// 		joinDate: '21 Dec 2024'
-	// 	},
-	// 	{
-	// 		id: 6,
-	// 		name: 'Thomas Wilson',
-	// 		email: 'thomas.w@example.com',
-	// 		plan: 'Standard',
-	// 		status: 'Pending',
-	// 		joinDate: '21 Apr 2025'
-	// 	}
-	// ];
-
-	// let searchQuery = '';
-	// let selectedFilter = 'All';
-	// let filteredMembers = [...members];
 
 	// Fetch members from API
 	onMount(async () => {
@@ -107,8 +52,15 @@
 		return matchesSearch && matchesFilter;
 	});
 
-	function deleteMember(id: number) {
-		members = members.filter((member) => member.id !== id);
+	// fetch + delete:
+
+	async function handleDelete(id: number) {
+		try {
+			await deleteMember(id);
+			members = members.filter((m) => m.id !== id);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Unknown delete error';
+		}
 	}
 </script>
 
@@ -423,7 +375,7 @@
 								<!-- svelte-ignore a11y_consider_explicit_label -->
 								<button
 									class="text-red-600 hover:text-red-900"
-									on:click={() => deleteMember(member.id)}
+									on:click={() => handleDelete(member.id)}
 								>
 									<svg
 										xmlns="http://www.w3.org/2000/svg"

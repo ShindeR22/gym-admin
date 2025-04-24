@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { createMember, type MemberFormData } from './memberpostapi';
+	import { createMember, type MemberFormData } from './addapi';
 
 	// Initialize form data with default values
 	let formData: MemberFormData = {
