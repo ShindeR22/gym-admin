@@ -1,4 +1,4 @@
-"use client"
+
 
 // Type definition for form data
 export interface MemberFormData {
