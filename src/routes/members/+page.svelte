@@ -356,7 +356,10 @@
 							>
 							<td class="px-6 py-4 whitespace-nowrap text-right text-m font-medium">
 								<!-- svelte-ignore a11y_consider_explicit_label -->
-								<button class="text-indigo-600 hover:text-indigo-900 mr-3">
+								<button
+									class="text-indigo-600 hover:text-indigo-900 mr-3"
+									on:click={() => goto(`/members/edit/${member.id}`)}
+								>
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										class="h-5 w-5"

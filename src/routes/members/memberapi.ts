@@ -65,4 +65,33 @@ export async function deleteMember(id: number): Promise<void> {
 }
 
 
+export async function getMember(id: string): Promise<MemberFormData> {
+        const response = await fetch(`/api/members/${id}`);
+        const data = await response.json();
 
+        if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Failed to load member');
+        }
+
+        return data.member;
+}
+
+
+export async function updateMember(id: string, data: MemberFormData): Promise<void> {
+        // Remove id, createdAt, and updatedAt from the data object
+        const { ...updateData } = data;
+
+        const response = await fetch(`/api/members/${id}`, {
+                method: 'PUT',
+                headers: {
+                        'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+                throw new Error(result.error || 'Failed to update member');
+        }
+}
