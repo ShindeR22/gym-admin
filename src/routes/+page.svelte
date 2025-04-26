@@ -1,5 +1,5 @@
 <!-- src/routes/dashboard/+page.svelte -->
-<!-- <script lang="ts">
+<script lang="ts">
 	import { page } from '$app/stores';
 	import DashboardMetrics from '$lib/components/DashboardMetrics.svelte';
 	import ClassesTable from '$lib/components/ClassesTable.svelte';
@@ -40,4 +40,4 @@
 		<h3 class="text-lg font-semibold mb-4">New Members</h3>
 		<NewMembers {members} />
 	</div>
-</div> -->
+</div>
