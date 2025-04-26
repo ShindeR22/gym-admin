@@ -1,4 +1,4 @@
-<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 px-4 sm:px-6 lg:px-8">
 	<div class="bg-gray-100 p-4 rounded shadow">
 		<h3 class="text-lg font-bold">Total Members</h3>
 		<p class="text-2xl">1,284 <span class="text-green-500 text-sm">+12%</span></p>

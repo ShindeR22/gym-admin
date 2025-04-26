@@ -1,15 +1,11 @@
-<!-- src/lib/components/Header.svelte -->
 <script lang="ts">
 	import { Bell } from 'svelte-heros';
 	import { signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
+	import { isMobile, isSidebarOpen } from '$lib/stores';
 
 	// Access the session data
 	$: user = $page.data.session?.user;
-
-	function handleLogout() {
-		signOut({ callbackUrl: '/signin' });
-	}
 
 	// Create initials from user name or email
 	$: initials = user?.name
@@ -17,10 +13,25 @@
 		: user?.email
 			? user.email[0].toUpperCase()
 			: 'U';
+
+	function handleLogout() {
+		signOut({ callbackUrl: '/signin' });
+	}
+
+	function toggleSidebar() {
+		$isSidebarOpen = !$isSidebarOpen;
+	}
 </script>
 
 <header class="bg-white shadow p-4 flex justify-between items-center border-b">
 	<div class="flex items-center gap-4">
+		{#if $isMobile}
+			<button on:click={toggleSidebar} class="mr-4">
+				<div class="w-6 h-0.5 bg-[#2E1F89] mb-1"></div>
+				<div class="w-6 h-0.5 bg-[#2E1F89] mb-1"></div>
+				<div class="w-6 h-0.5 bg-[#2E1F89]"></div>
+			</button>
+		{/if}
 		<!-- <h1 class="text-xl font-bold text-purple-700">FLEX GYM</h1> -->
 	</div>
 

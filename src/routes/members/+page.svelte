@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { deleteMember, getMembers } from './memberapi';
+	import { isMobile } from '$lib/stores';
 
-	// Types for type safety
 	interface Member {
 		id: number;
 		firstName: string;
@@ -21,17 +21,21 @@
 	let loading = true;
 	let error = '';
 
-	// Derive status and joinDate for UI
-	const deriveStatus = (m: Member) => {
+	// Track which member's info popup is open
+	let showInfoPopup = false;
+	let selectedMemberId: number;
+
+	// Derive status for UI
+	const deriveStatus = (m: Member): 'Active' | 'Inactive' | 'Pending' => {
 		const now = new Date();
 		const start = new Date(m.startDate);
 		const end = new Date(m.endDate);
-		if (start > now) return ' Inactive';
+		if (start > now) return 'Inactive';
 		if (end >= now) return 'Active';
 		return 'Pending';
 	};
 
-	// Fetch members from API
+	// Fetch members
 	onMount(async () => {
 		try {
 			members = await getMembers();
@@ -42,6 +46,7 @@
 		}
 	});
 
+	// Filtered and searched
 	$: filteredMembers = members.filter((member) => {
 		const name = `${member.firstName} ${member.lastName}`;
 		const matchesSearch =
@@ -52,15 +57,40 @@
 		return matchesSearch && matchesFilter;
 	});
 
-	// fetch + delete:
-
-	async function handleDelete(id: number) {
+	async function handleDelete(id: number): Promise<void> {
 		try {
 			await deleteMember(id);
 			members = members.filter((m) => m.id !== id);
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Unknown delete error';
 		}
+	}
+
+	function toggleInfoPopup(memberId: number): void {
+		selectedMemberId = memberId;
+		showInfoPopup = true;
+	}
+
+	function getMember(id: number): Member | undefined {
+		return members.find((m) => m.id === id);
+	}
+
+	// Helper function to safely get member status
+	function getMemberStatus(id: number): 'Active' | 'Inactive' | 'Pending' | '' {
+		const member = getMember(id);
+		return member ? deriveStatus(member) : '';
+	}
+
+	// Helper function to safely get member data for display
+	function getMemberData(id: number, property: keyof Member): string | number {
+		const member = getMember(id);
+		return member ? member[property] : '';
+	}
+
+	// Helper function to safely format a date from a member
+	function getMemberFormattedDate(id: number, dateProperty: 'startDate' | 'endDate'): string {
+		const member = getMember(id);
+		return member ? new Date(member[dateProperty]).toLocaleDateString() : '';
 	}
 </script>
 
@@ -109,7 +139,7 @@
 				<div class="ml-4">
 					<p class="text-gray-500 text-m">Total Members</p>
 					<p class="text-2xl font-bold text-gray-800">1,284</p>
-					<p class="text-green-500 text-m flex items-center">
+					<!-- <p class="text-green-500 text-m flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-4 w-4 mr-1"
@@ -125,7 +155,7 @@
 							/>
 						</svg>
 						+12% from last month
-					</p>
+					</p> -->
 				</div>
 			</div>
 		</div>
@@ -150,7 +180,7 @@
 				<div class="ml-4">
 					<p class="text-gray-500 text-m">Active Members</p>
 					<p class="text-2xl font-bold text-gray-800">1,051</p>
-					<p class="text-green-500 text-m flex items-center">
+					<!-- <p class="text-green-500 text-m flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-4 w-4 mr-1"
@@ -166,7 +196,7 @@
 							/>
 						</svg>
 						+8% from last month
-					</p>
+					</p> -->
 				</div>
 			</div>
 		</div>
@@ -191,7 +221,7 @@
 				<div class="ml-4">
 					<p class="text-gray-500 text-m">New This Month</p>
 					<p class="text-2xl font-bold text-gray-800">78</p>
-					<p class="text-green-500 text-m flex items-center">
+					<!-- <p class="text-green-500 text-m flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-4 w-4 mr-1"
@@ -207,7 +237,7 @@
 							/>
 						</svg>
 						+15% from last month
-					</p>
+					</p> -->
 				</div>
 			</div>
 		</div>
@@ -279,135 +309,321 @@
 			</div>
 		</div>
 
-		<div class="overflow-x-auto">
-			<table class="min-w-full divide-y divide-gray-200">
-				<thead class="bg-gray-50">
-					<tr>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Name</th
-						>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Mobile NO</th
-						>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Membership Plan</th
-						>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Status</th
-						>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Join Date</th
-						>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>End Date</th
-						>
-						<th
-							class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>Actions</th
-						>
-					</tr>
-				</thead>
-				<tbody class="bg-white divide-y divide-gray-200">
-					{#each filteredMembers as member (member.id)}
-						<tr class="hover:bg-gray-50">
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="flex items-center">
-									<div
-										class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-medium"
-									>
-										{`${member.firstName} ${member.lastName}`
-											.split(' ')
-											.map((n: string) => n[0])
-											.join('')}
-									</div>
-									<div class="ml-4">
-										<div class="text-m font-medium text-gray-900">
-											{member.firstName}
-											{member.lastName}
+		{#if !$isMobile}
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200">
+					<thead class="bg-gray-50">
+						<tr>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Name</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Mobile NO</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Membership Plan</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Status</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Join Date</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>End Date</th
+							>
+							<th
+								class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Actions</th
+							>
+						</tr>
+					</thead>
+					<tbody class="bg-white divide-y divide-gray-200">
+						{#each filteredMembers as member (member.id)}
+							<tr class="hover:bg-gray-50">
+								<td class="px-6 py-4 whitespace-nowrap">
+									<div class="flex items-center">
+										<div
+											class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-medium"
+										>
+											{`${member.firstName} ${member.lastName}`
+												.split(' ')
+												.map((n: string) => n[0])
+												.join('')}
+										</div>
+										<div class="ml-4">
+											<div class="text-m font-medium text-gray-900">
+												{member.firstName}
+												{member.lastName}
+											</div>
 										</div>
 									</div>
-								</div>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap"
-								><div class="text-m text-gray-500">{member.phone}</div></td
-							>
-							<td class="px-6 py-4 whitespace-nowrap"
-								><div class="text-m text-gray-900">{member.membershipPlan}</div></td
-							>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<span
-									class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-									class:!bg-green-100={!deriveStatus(member)}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap"
+									><div class="text-m text-gray-500">{member.phone}</div></td
 								>
-									{deriveStatus(member)}
-								</span>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-m text-gray-500"
-								>{new Date(member.startDate).toLocaleDateString()}</td
-							>
-							<td class="px-6 py-4 whitespace-nowrap text-m text-gray-500"
-								>{new Date(member.endDate).toLocaleDateString()}</td
-							>
-							<td class="px-6 py-4 whitespace-nowrap text-right text-m font-medium">
-								<!-- svelte-ignore a11y_consider_explicit_label -->
-								<button
-									class="text-indigo-600 hover:text-indigo-900 mr-3"
-									on:click={() => goto(`/members/edit/${member.id}`)}
+								<td class="px-6 py-4 whitespace-nowrap"
+									><div class="text-m text-gray-900">{member.membershipPlan}</div></td
 								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-5 w-5"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
+								<td class="px-6 py-4 whitespace-nowrap">
+									<span
+										class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+										class:!bg-green-100={!deriveStatus(member)}
 									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-										/>
-									</svg>
-								</button>
-								<!-- svelte-ignore a11y_consider_explicit_label -->
-								<button
-									class="text-red-600 hover:text-red-900"
-									on:click={() => handleDelete(member.id)}
+										{deriveStatus(member)}
+									</span>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-m text-gray-500"
+									>{new Date(member.startDate).toLocaleDateString()}</td
 								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-5 w-5"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
+								<td class="px-6 py-4 whitespace-nowrap text-m text-gray-500"
+									>{new Date(member.endDate).toLocaleDateString()}</td
+								>
+								<td class="px-6 py-4 whitespace-nowrap text-right text-m font-medium">
+									<!-- svelte-ignore a11y_consider_explicit_label -->
+									<button
+										class="text-indigo-600 hover:text-indigo-900 mr-3"
+										on:click={() => goto(`/members/edit/${member.id}`)}
 									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-										/>
-									</svg>
-								</button>
-							</td>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="h-5 w-5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+											/>
+										</svg>
+									</button>
+									<!-- svelte-ignore a11y_consider_explicit_label -->
+									<button
+										class="text-red-600 hover:text-red-900"
+										on:click={() => handleDelete(member.id)}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="h-5 w-5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+											/>
+										</svg>
+									</button>
+								</td>
+							</tr>
+						{/each}
+						{#if filteredMembers.length === 0}
+							<tr
+								><td colspan="6" class="px-6 py-4 text-center text-gray-500"
+									>No members found matching your search criteria</td
+								></tr
+							>
+						{/if}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+		{#if $isMobile}
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200">
+					<thead class="bg-gray-50">
+						<tr>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Name</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Mobile NO</th
+							>
+							<th
+								class="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+								>Actions</th
+							>
 						</tr>
-					{/each}
-					{#if filteredMembers.length === 0}
-						<tr
-							><td colspan="6" class="px-6 py-4 text-center text-gray-500"
-								>No members found matching your search criteria</td
-							></tr
+					</thead>
+					<tbody class="bg-white divide-y divide-gray-200">
+						{#each filteredMembers as member (member.id)}
+							<tr class="hover:bg-gray-50">
+								<td class="py-4 whitespace-nowrap">
+									<div class="flex items-center">
+										<div class="ml-4">
+											<div class="text-m font-medium text-gray-900">
+												{member.firstName}
+												{member.lastName}
+											</div>
+										</div>
+									</div>
+								</td>
+								<td class="px-4 py-4 whitespace-nowrap">
+									<div class="text-m text-gray-500">{member.phone}</div>
+								</td>
+								<td class="py-4 whitespace-nowrap text-right text-m font-medium">
+									<!-- Info button -->
+									<button
+										aria-label="edit button"
+										class="text-blue-600 hover:text-blue-900 mr-3"
+										on:click={() => toggleInfoPopup(member.id)}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="h-5 w-5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+											/>
+										</svg>
+									</button>
+
+									<!-- Edit button -->
+									<button
+										aria-label="delete member button "
+										class="text-indigo-600 hover:text-indigo-900 mr-3"
+										on:click={() => goto(`/members/edit/${member.id}`)}
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="h-5 w-5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+											/>
+										</svg>
+									</button>
+								</td>
+							</tr>
+						{/each}
+						{#if filteredMembers.length === 0}
+							<tr>
+								<td colspan="6" class="px-6 py-4 text-center text-gray-500">
+									No members found matching your search criteria
+								</td>
+							</tr>
+						{/if}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+
+		<!-- Info Popup -->
+
+		{#if showInfoPopup && selectedMemberId}
+			<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+				<div
+					class="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full max-h-[80vh] overflow-y-auto"
+				>
+					<div class="flex justify-between items-center mb-4">
+						<h2 class="text-xl font-bold">Member Information</h2>
+						<button
+							aria-label="Close info popup"
+							on:click={() => (showInfoPopup = false)}
+							class="text-gray-500 hover:text-gray-700"
 						>
-					{/if}
-				</tbody>
-			</table>
-		</div>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+						</button>
+					</div>
+
+					<div class="space-y-4">
+						<div class="border-b pb-2">
+							<h3 class="font-medium text-gray-700">Membership Plan</h3>
+							<p class="text-gray-900">{getMemberData(selectedMemberId, 'membershipPlan')}</p>
+						</div>
+
+						<div class="border-b pb-2">
+							<h3 class="font-medium text-gray-700">Status</h3>
+							<span
+								class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+								class:bg-green-100={getMemberStatus(selectedMemberId) === 'Active'}
+							>
+								{getMemberStatus(selectedMemberId)}
+							</span>
+						</div>
+						<div class="border-b pb-2">
+							<h3 class="font-medium text-gray-700">E-mail</h3>
+							<p class="text-gray-900">
+								{getMemberData(selectedMemberId, 'email')}
+							</p>
+						</div>
+
+						<div class="border-b pb-2">
+							<h3 class="font-medium text-gray-700">Join Date</h3>
+							<p class="text-gray-900">
+								{getMemberFormattedDate(selectedMemberId, 'startDate')}
+							</p>
+						</div>
+
+						<div class="border-b pb-2">
+							<h3 class="font-medium text-gray-700">End Date</h3>
+							<p class="text-gray-900">
+								{getMemberFormattedDate(selectedMemberId, 'endDate')}
+							</p>
+						</div>
+					</div>
+
+					<div class="mt-6 text-right">
+						<button
+							on:click={() => (showInfoPopup = false)}
+							class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+						>
+							Close
+						</button>
+
+						<button
+							on:click={async () => {
+								await handleDelete(selectedMemberId);
+								showInfoPopup = false;
+								goto('/members');
+							}}
+							class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+						>
+							Delete
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<div class="px-6 py-4 border-t flex justify-between items-center">
 			<div class="text-gray-500 text-m">
@@ -417,7 +633,10 @@
 				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">Previous</button>
 				<button class="bg-indigo-600 text-white rounded px-3 py-1 text-m">1</button>
 				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">2</button>
-				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">3</button>
+				{#if !$isMobile}
+					<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">3</button>
+					<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">4</button>
+				{/if}
 				<button class="border rounded px-3 py-1 text-m hover:bg-gray-50">Next</button>
 			</div>
 		</div>

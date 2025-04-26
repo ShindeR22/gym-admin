@@ -2,6 +2,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
+	import { isMobile, isSidebarOpen } from '$lib/stores';
 	import { signOut } from '@auth/sveltekit/client';
 	import { SignOut } from '@auth/sveltekit/components';
 
@@ -23,7 +24,27 @@
 	}
 </script>
 
-<nav class="bg-[#2E1F89] text-white w-64 h-screen flex flex-col justify-between">
+{#if $isMobile && $isSidebarOpen}
+	<div
+		class="fixed inset-0 bg-transparent bg-opacity-50 z-10"
+		on:click={() => ($isSidebarOpen = false)}
+	></div>
+{/if}
+
+<!-- <nav
+	class="fixed top-0 left-0 h-full w-64 bg-[#2E1F89] text-white z-20 transform transition-transform duration-300 ease-in-out flex flex-col justify-between {$isMobile
+		? $isSidebarOpen
+			? 'translate-x-0'
+			: '-translate-x-full'
+		: 'translate-x-0'}"
+> -->
+<nav
+	class="bg-[#2E1F89] top-0 left-0 h-full z-20 text-white w-64 flex flex-col justify-between {$isMobile
+		? $isSidebarOpen
+			? 'translate-x-0 '
+			: '-translate-x-full fixed'
+		: 'translate-x-0'}"
+>
 	<div>
 		<div class="text-2xl font-bold px-6 py-4">BM Fitness</div>
 		<ul class="space-y-2 px-2 pt-4">
